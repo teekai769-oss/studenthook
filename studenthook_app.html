@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentHook — Find Deals</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --yellow: #F5C842;
+  --yellow-dark: #C9A200;
+  --black: #0E0E0E;
+  --white: #FAFAF7;
+  --gray: #6B6B6B;
+  --light: #F0EFEA;
+  --border: rgba(14,14,14,0.1);
+  --green: #1A7A4A;
+  --green-bg: #E8F5EE;
+  --red: #E53935;
+  --red-bg: #FFEBEE;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--light); color:var(--black); min-height:100vh; }
+
+/* LAYOUT */
+.app { display:grid; grid-template-columns:260px 1fr; min-height:100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  background:var(--black);
+  padding:28px 20px;
+  display:flex; flex-direction:column; gap:8px;
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+}
+.sidebar-logo {
+  font-family:'Syne',sans-serif; font-weight:800; font-size:20px;
+  color:var(--white); margin-bottom:24px; padding:0 8px;
+  letter-spacing:-0.5px;
+}
+.sidebar-logo span { color:var(--yellow); }
+
+.sidebar-label {
+  font-size:10px; font-weight:600; color:rgba(255,255,255,0.3);
+  text-transform:uppercase; letter-spacing:0.1em;
+  padding:0 8px; margin:12px 0 6px;
+}
+
+.cat-btn {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px; border-radius:12px;
+  border:none; background:transparent;
+  color:rgba(255,255,255,0.55); font-family:'DM Sans',sans-serif;
+  font-size:14px; font-weight:400; cursor:pointer;
+  text-align:left; width:100%;
+  transition:background 0.15s, color 0.15s;
+}
+.cat-btn:hover { background:rgba(255,255,255,0.07); color:var(--white); }
+.cat-btn.active { background:var(--yellow); color:var(--black); font-weight:500; }
+.cat-btn.active .cat-count { background:rgba(0,0,0,0.15); color:var(--black); }
+
+.cat-icon { font-size:18px; flex-shrink:0; width:24px; text-align:center; }
+.cat-name { flex:1; }
+.cat-count {
+  font-size:11px; font-weight:600;
+  background:rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.5);
+  padding:2px 8px; border-radius:100px;
+}
+
+.sidebar-divider { border:none; border-top:1px solid rgba(255,255,255,0.07); margin:8px 0; }
+
+.uni-selector {
+  margin-top:auto; padding-top:20px;
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+.uni-label { font-size:11px; color:rgba(255,255,255,0.3); margin-bottom:8px; padding:0 4px; }
+.uni-select {
+  width:100%; padding:10px 12px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  color:var(--white); font-family:'DM Sans',sans-serif; font-size:13px;
+  outline:none; cursor:pointer;
+}
+.uni-select option { background:var(--black); }
+
+/* MAIN */
+.main { display:flex; flex-direction:column; min-height:100vh; }
+
+/* TOP BAR */
+.topbar {
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex; align-items:center; gap:16px;
+  position:sticky; top:0; z-index:10;
+}
+
+.search-wrap {
+  flex:1; position:relative; max-width:440px;
+}
+.search-icon {
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  font-size:16px; color:var(--gray); pointer-events:none;
+}
+.search-input {
+  width:100%; padding:11px 16px 11px 40px;
+  border:1.5px solid var(--border);
+  border-radius:100px; background:var(--light);
+  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--black);
+  outline:none; transition:border-color 0.2s;
+}
+.search-input:focus { border-color:var(--black); background:var(--white); }
+.search-input::placeholder { color:var(--gray); }
+
+.sort-select {
+  padding:10px 14px;
+  border:1.5px solid var(--border);
+  border-radius:100px;
+  background:var(--white);
+  font-family:'DM Sans',sans-serif; font-size:13px; color:var(--black);
+  outline:none; cursor:pointer;
+}
+
+.verified-badge {
+  display:flex; align-items:center; gap:7px;
+  background:var(--green-bg);
+  color:var(--green);
+  font-size:13px; font-weight:500;
+  padding:8px 16px; border-radius:100px;
+  margin-left:auto;
+}
+.verified-dot { width:7px; height:7px; background:var(--green); border-radius:50%; animation:blink 2s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* CONTENT */
+.content { padding:24px 28px; flex:1; }
+
+.content-header {
+  display:flex; align-items:baseline; justify-content:space-between;
+  margin-bottom:20px;
+}
+.content-title {
+  font-family:'Syne',sans-serif; font-size:22px; font-weight:800;
+  letter-spacing:-0.5px;
+}
+.content-count { font-size:13px; color:var(--gray); }
+
+/* FEATURED STRIP */
+.featured-strip {
+  display:flex; gap:14px; overflow-x:auto; padding-bottom:4px;
+  margin-bottom:28px; scrollbar-width:none;
+}
+.featured-strip::-webkit-scrollbar { display:none; }
+
+.featured-card {
+  flex-shrink:0; width:240px;
+  background:var(--black); border-radius:18px;
+  padding:20px; position:relative; overflow:hidden;
+  cursor:pointer; transition:transform 0.2s;
+}
+.featured-card:hover { transform:translateY(-3px); }
+.featured-card::before {
+  content:''; position:absolute; top:-30px; right:-30px;
+  width:120px; height:120px; border-radius:50%;
+  background:var(--yellow); opacity:0.12;
+}
+.featured-tag {
+  font-size:10px; font-weight:700; color:var(--yellow);
+  text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;
+  display:flex; align-items:center; gap:6px;
+}
+.featured-tag::before { content:'★'; font-size:10px; }
+.featured-name { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--white); margin-bottom:4px; }
+.featured-location { font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:14px; }
+.featured-discount {
+  font-family:'Syne',sans-serif; font-size:28px; font-weight:800;
+  color:var(--yellow); letter-spacing:-1px;
+}
+.featured-sub { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; }
+
+/* DEAL GRID */
+.deal-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr));
+  gap:16px;
+}
+
+.deal-card {
+  background:var(--white); border-radius:18px;
+  border:1px solid var(--border);
+  overflow:hidden; cursor:pointer;
+  transition:transform 0.2s, box-shadow 0.2s;
+  animation:fadeIn 0.3s ease both;
+}
+.deal-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(14,14,14,0.08); }
+
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.deal-card-top {
+  background:var(--light);
+  padding:20px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.deal-emoji-big {
+  width:56px; height:56px; background:var(--white);
+  border-radius:16px; display:flex; align-items:center;
+  justify-content:center; font-size:28px;
+  box-shadow:0 2px 8px rgba(14,14,14,0.06);
+}
+.deal-card-discount {
+  font-family:'Syne',sans-serif; font-size:26px; font-weight:800;
+  color:var(--black); letter-spacing:-1px; text-align:right;
+}
+.deal-card-discount-label { font-size:11px; color:var(--gray); font-weight:400; text-align:right; margin-top:1px; }
+
+.deal-card-body { padding:16px 18px; }
+.deal-card-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:4px; }
+.deal-card-cat { font-size:12px; color:var(--gray); margin-bottom:10px; }
+.deal-card-meta { display:flex; align-items:center; justify-content:space-between; }
+.deal-card-location { font-size:12px; color:var(--gray); display:flex; align-items:center; gap:4px; }
+.deal-card-distance { font-size:11px; font-weight:600; color:var(--green); background:var(--green-bg); padding:3px 8px; border-radius:100px; }
+.deal-card-footer {
+  padding:12px 18px; border-top:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.deal-card-uni { font-size:11px; color:var(--gray); }
+.save-btn {
+  width:30px; height:30px; border-radius:50%;
+  border:1.5px solid var(--border);
+  background:transparent; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; transition:all 0.2s;
+}
+.save-btn:hover { border-color:var(--red); background:var(--red-bg); }
+.save-btn.saved { border-color:var(--red); background:var(--red-bg); }
+
+/* MODAL */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(14,14,14,0.5);
+  backdrop-filter:blur(4px); z-index:100;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px; opacity:0; pointer-events:none;
+  transition:opacity 0.2s;
+}
+.modal-overlay.open { opacity:1; pointer-events:all; }
+
+.modal {
+  background:var(--white); border-radius:24px;
+  width:100%; max-width:480px;
+  overflow:hidden;
+  transform:translateY(20px);
+  transition:transform 0.25s;
+  max-height:90vh; overflow-y:auto;
+}
+.modal-overlay.open .modal { transform:translateY(0); }
+
+.modal-top {
+  background:var(--black); padding:32px;
+  position:relative; overflow:hidden;
+}
+.modal-top::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:160px; height:160px; border-radius:50%;
+  background:var(--yellow); opacity:0.1;
+}
+.modal-emoji { font-size:48px; margin-bottom:12px; }
+.modal-name { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; color:var(--white); margin-bottom:4px; letter-spacing:-0.5px; }
+.modal-cat { font-size:14px; color:rgba(255,255,255,0.45); }
+.modal-discount-big {
+  font-family:'Syne',sans-serif; font-size:52px; font-weight:800;
+  color:var(--yellow); letter-spacing:-2px; margin-top:16px; line-height:1;
+}
+.modal-discount-desc { font-size:13px; color:rgba(255,255,255,0.4); margin-top:4px; }
+
+.modal-body { padding:24px; }
+.modal-section-title { font-size:11px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; }
+
+.modal-info-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.modal-info-icon { width:36px; height:36px; background:var(--light); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.modal-info-label { font-size:12px; color:var(--gray); }
+.modal-info-value { font-size:14px; font-weight:500; color:var(--black); }
+
+.modal-terms {
+  background:var(--light); border-radius:12px;
+  padding:14px 16px; margin:16px 0;
+  font-size:13px; color:var(--gray); line-height:1.6;
+}
+
+.modal-cta {
+  width:100%; padding:15px;
+  background:var(--black); color:var(--white);
+  font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600;
+  border:none; border-radius:100px; cursor:pointer;
+  transition:background 0.2s, transform 0.15s;
+  margin-top:8px;
+}
+.modal-cta:hover { background:#222; transform:translateY(-1px); }
+.modal-cta.redeemed { background:var(--green); }
+
+.modal-close {
+  position:absolute; top:16px; right:16px;
+  width:32px; height:32px; border-radius:50%;
+  background:rgba(255,255,255,0.1); border:none;
+  color:var(--white); font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background 0.2s;
+}
+.modal-close:hover { background:rgba(255,255,255,0.2); }
+
+/* EMPTY STATE */
+.empty-state { text-align:center; padding:80px 24px; }
+.empty-emoji { font-size:48px; margin-bottom:16px; }
+.empty-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; margin-bottom:8px; }
+.empty-desc { font-size:14px; color:var(--gray); }
+
+/* MOBILE */
+.mobile-bar { display:none; }
+
+@media(max-width:768px) {
+  .app { grid-template-columns:1fr; }
+  .sidebar { display:none; }
+  .topbar { padding:12px 16px; flex-wrap:wrap; }
+  .verified-badge { display:none; }
+  .content { padding:16px; }
+  .mobile-bar {
+    display:flex; gap:8px; overflow-x:auto;
+    padding:12px 16px; background:var(--white);
+    border-bottom:1px solid var(--border);
+    scrollbar-width:none;
+  }
+  .mobile-bar::-webkit-scrollbar { display:none; }
+  .mobile-cat-btn {
+    flex-shrink:0; padding:8px 14px;
+    border-radius:100px; border:1.5px solid var(--border);
+    background:var(--white); font-family:'DM Sans',sans-serif;
+    font-size:13px; font-weight:500; cursor:pointer;
+    white-space:nowrap; transition:all 0.15s;
+  }
+  .mobile-cat-btn.active { background:var(--black); color:var(--white); border-color:var(--black); }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Student<span>Hook</span></div>
+
+    <div class="sidebar-label">Categories</div>
+    <button class="cat-btn active" onclick="filterCat('all')">
+      <span class="cat-icon">🏷️</span>
+      <span class="cat-name">All deals</span>
+      <span class="cat-count">50</span>
+    </button>
+    <button class="cat-btn" onclick="filterCat('food')">
+      <span class="cat-icon">🍱</span>
+      <span class="cat-name">Food</span>
+      <span class="cat-count">24</span>
+    </button>
+    <button class="cat-btn" onclick="filterCat('printing')">
+      <span class="cat-icon">🖨️</span>
+      <span class="cat-name">Printing</span>
+      <span class="cat-count">8</span>
+    </button>
+    <button class="cat-btn" onclick="filterCat('transport')">
+      <span class="cat-icon">🛵</span>
+      <span class="cat-name">Transport</span>
+      <span class="cat-count">6</span>
+    </button>
+    <button class="cat-btn" onclick="filterCat('salon')">
+      <span class="cat-icon">✂️</span>
+      <span class="cat-name">Salon & Barber</span>
+      <span class="cat-count">12</span>
+    </button>
+    <button class="cat-btn" onclick="filterCat('airtime')">
+      <span class="cat-icon">📱</span>
+      <span class="cat-name">Airtime & Data</span>
+      <span class="cat-count">5</span>
+    </button>
+    <button class="cat-btn" onclick="filterCat('accommodation')">
+      <span class="cat-icon">🏠</span>
+      <span class="cat-name">Accommodation</span>
+      <span class="cat-count">9</span>
+    </button>
+    <button class="cat-btn" onclick="filterCat('books')">
+      <span class="cat-icon">📚</span>
+      <span class="cat-name">Books & Supplies</span>
+      <span class="cat-count">7</span>
+    </button>
+
+    <hr class="sidebar-divider">
+
+    <div class="uni-selector">
+      <div class="uni-label">Your university</div>
+      <select class="uni-select" onchange="filterUni(this.value)">
+        <option value="all">All universities</option>
+        <option value="makerere" selected>Makerere University</option>
+        <option value="kyambogo">Kyambogo University</option>
+        <option value="mubs">MUBS</option>
+        <option value="nkumba">Nkumba University</option>
+      </select>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Search deals, businesses..." oninput="searchDeals(this.value)">
+      </div>
+      <select class="sort-select" onchange="sortDeals(this.value)">
+        <option value="featured">Featured first</option>
+        <option value="discount">Highest discount</option>
+        <option value="nearest">Nearest first</option>
+        <option value="newest">Newest</option>
+      </select>
+      <div class="verified-badge">
+        <span class="verified-dot"></span>
+        Makerere student
+      </div>
+    </div>
+
+    <!-- MOBILE CATEGORY BAR -->
+    <div class="mobile-bar">
+      <button class="mobile-cat-btn active" onclick="filterCatMobile(this,'all')">All</button>
+      <button class="mobile-cat-btn" onclick="filterCatMobile(this,'food')">🍱 Food</button>
+      <button class="mobile-cat-btn" onclick="filterCatMobile(this,'printing')">🖨️ Printing</button>
+      <button class="mobile-cat-btn" onclick="filterCatMobile(this,'transport')">🛵 Transport</button>
+      <button class="mobile-cat-btn" onclick="filterCatMobile(this,'salon')">✂️ Salon</button>
+      <button class="mobile-cat-btn" onclick="filterCatMobile(this,'airtime')">📱 Airtime</button>
+      <button class="mobile-cat-btn" onclick="filterCatMobile(this,'accommodation')">🏠 Housing</button>
+      <button class="mobile-cat-btn" onclick="filterCatMobile(this,'books')">📚 Books</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- FEATURED -->
+      <div id="featured-section">
+        <div class="sidebar-label" style="color:var(--gray);padding:0;margin-bottom:12px;">⭐ Featured deals</div>
+        <div class="featured-strip" id="featured-strip"></div>
+      </div>
+
+      <!-- DEAL GRID -->
+      <div class="content-header">
+        <div class="content-title" id="section-title">All deals</div>
+        <div class="content-count" id="deal-count"></div>
+      </div>
+      <div class="deal-grid" id="deal-grid"></div>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <div class="empty-emoji">🔍</div>
+        <div class="empty-title">No deals found</div>
+        <div class="empty-desc">Try a different search or category</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-top">
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      <div class="modal-emoji" id="m-emoji"></div>
+      <div class="modal-name" id="m-name"></div>
+      <div class="modal-cat" id="m-cat"></div>
+      <div class="modal-discount-big" id="m-discount"></div>
+      <div class="modal-discount-desc" id="m-desc"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section-title">Details</div>
+      <div class="modal-info-row">
+        <div class="modal-info-icon">📍</div>
+        <div><div class="modal-info-label">Location</div><div class="modal-info-value" id="m-location"></div></div>
+      </div>
+      <div class="modal-info-row">
+        <div class="modal-info-icon">🕐</div>
+        <div><div class="modal-info-label">Opening hours</div><div class="modal-info-value" id="m-hours"></div></div>
+      </div>
+      <div class="modal-info-row">
+        <div class="modal-info-icon">🎓</div>
+        <div><div class="modal-info-label">Valid for</div><div class="modal-info-value" id="m-uni"></div></div>
+      </div>
+      <div class="modal-terms" id="m-terms"></div>
+      <button class="modal-cta" id="modal-cta-btn" onclick="redeemDeal()">Show deal to business →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const deals = [
+  { id:1, name:"Wandegeya Rolex Corner", cat:"food", emoji:"🍱", discount:"20%", discountNum:20, desc:"20% off all rolexes and snacks", location:"Wandegeya, 0.2km from Makerere main gate", distance:"0.2km", hours:"7:00am – 10:00pm daily", uni:"All Makerere students", terms:"Show your student ID or this app. Valid Mon–Fri only. Not combined with other offers.", featured:true, saved:false, universities:["makerere"] },
+  { id:2, name:"QuickPrint Centre", cat:"printing", emoji:"🖨️", discount:"15%", discountNum:15, desc:"15% off all printing & binding", location:"Kikoni, 0.4km from Makerere", distance:"0.4km", hours:"8:00am – 8:00pm daily", uni:"Makerere & Kyambogo", terms:"Show student ID. Minimum UGX 2,000 purchase. Valid on all printing services.", featured:true, saved:false, universities:["makerere","kyambogo"] },
+  { id:3, name:"SafeBoda Student Ride", cat:"transport", emoji:"🛵", discount:"10%", discountNum:10, desc:"10% off every ride with code STUDENT", location:"Kampala-wide", distance:"Citywide", hours:"24 hours", uni:"All universities", terms:"Use code STUDENT at checkout. Valid for first 3 rides per week per account.", featured:true, saved:false, universities:["makerere","kyambogo","mubs","nkumba"] },
+  { id:4, name:"Campus Cuts Barbershop", cat:"salon", emoji:"✂️", discount:"UGX 3k off", discountNum:15, desc:"UGX 3,000 off any haircut", location:"Wandegeya, next to Total petrol station", distance:"0.5km", hours:"9:00am – 7:00pm, closed Sunday", uni:"All Makerere students", terms:"Show student ID at desk before service. One discount per week per student.", featured:false, saved:false, universities:["makerere"] },
+  { id:5, name:"Nakumatt Café", cat:"food", emoji:"☕", discount:"25%", discountNum:25, desc:"25% off all drinks and snacks", location:"Kikoni road, near CEDAT", distance:"0.6km", hours:"7:30am – 9:00pm", uni:"Makerere students", terms:"Valid on drinks and snacks only. Not applicable on full meals or alcohol.", featured:false, saved:false, universities:["makerere"] },
+  { id:6, name:"MTN Student Bundle", cat:"airtime", emoji:"📱", discount:"2GB free", discountNum:20, desc:"Get 2GB free on any top-up above UGX 5,000", location:"Any MTN shop", distance:"Multiple locations", hours:"8:00am – 6:00pm", uni:"All universities", terms:"Dial *165*2# and select student offer. Available once per month per SIM.", featured:false, saved:false, universities:["makerere","kyambogo","mubs","nkumba"] },
+  { id:7, name:"Makindye Hostel", cat:"accommodation", emoji:"🏠", discount:"UGX 50k off", discountNum:10, desc:"UGX 50,000 off first month's rent", location:"Kikoni, 1.2km from Makerere", distance:"1.2km", hours:"Visit 9am–5pm", uni:"New Makerere students", terms:"Available for new tenants only. Must show offer letter or student ID. Self-contained rooms only.", featured:false, saved:false, universities:["makerere"] },
+  { id:8, name:"Owino Book Market", cat:"books", emoji:"📚", discount:"10%", discountNum:10, desc:"10% off all secondhand textbooks", location:"Owino Market, city centre", distance:"3.1km", hours:"9:00am – 6:00pm daily", uni:"All universities", terms:"Mention StudentHook when buying. Discount applied by vendor on purchase.", featured:false, saved:false, universities:["makerere","kyambogo","mubs","nkumba"] },
+  { id:9, name:"Kyambogo Food Zone", cat:"food", emoji:"🥗", discount:"15%", discountNum:15, desc:"15% off lunch meals Mon–Fri", location:"Kyambogo campus, Block B canteen", distance:"On campus", hours:"11:30am – 3:00pm weekdays", uni:"Kyambogo students", terms:"Show student ID. Valid on sit-in meals only. Takeaway excluded.", featured:false, saved:false, universities:["kyambogo"] },
+  { id:10, name:"Clean & Neat Laundry", cat:"salon", emoji:"👕", discount:"20%", discountNum:20, desc:"20% off laundry per kg", location:"Makerere Hill Road", distance:"0.8km", hours:"8:00am – 8:00pm daily", uni:"All Makerere students", terms:"Minimum 2kg. Show student ID at drop-off. Discount applied on collection.", featured:false, saved:false, universities:["makerere"] },
+  { id:11, name:"Airtel Student SIM", cat:"airtime", emoji:"📶", discount:"3GB free", discountNum:25, desc:"3GB free on new Airtel student SIM", location:"Airtel shops citywide", distance:"Multiple", hours:"9:00am – 6:00pm", uni:"New students only", terms:"Must be a new Airtel subscriber. Show student ID and admission letter.", featured:false, saved:false, universities:["makerere","kyambogo","mubs","nkumba"] },
+  { id:12, name:"MUBS Copy Centre", cat:"printing", emoji:"📄", discount:"12%", discountNum:12, desc:"12% off all photocopying and binding", location:"MUBS main campus, Admin block", distance:"On campus", hours:"8:00am – 5:00pm weekdays", uni:"MUBS students", terms:"Show student ID. Valid on orders above UGX 3,000.", featured:false, saved:false, universities:["mubs"] },
+  { id:13, name:"Boda Bros Riders", cat:"transport", emoji:"🏍️", discount:"UGX 500 off", discountNum:10, desc:"UGX 500 off every campus ride", location:"Makerere main gate", distance:"At gate", hours:"6:00am – 11:00pm", uni:"Makerere students", terms:"Show StudentHook app to rider before boarding. One discount per journey.", featured:false, saved:false, universities:["makerere"] },
+  { id:14, name:"Spice Garden Restaurant", cat:"food", emoji:"🍛", discount:"30%", discountNum:30, desc:"30% off student lunch special", location:"Wandegeya market area", distance:"0.3km", hours:"11:00am – 4:00pm daily", uni:"All universities", terms:"Available on the student lunch special menu only. Valid Mon–Sat.", featured:false, saved:false, universities:["makerere","kyambogo"] },
+  { id:15, name:"Budget Hostel Nkumba", cat:"accommodation", emoji:"🛏️", discount:"UGX 30k off", discountNum:8, desc:"UGX 30,000 off monthly rent", location:"Near Nkumba University gate", distance:"0.1km", hours:"Office 8am–6pm", uni:"Nkumba students", terms:"For new tenants only. Show admission letter. First 3 months.", featured:false, saved:false, universities:["nkumba"] },
+];
+
+let currentCat = 'all';
+let currentSearch = '';
+let currentUni = 'makerere';
+let currentSort = 'featured';
+let dealsData = deals.map(d => ({...d}));
+
+function getFiltered() {
+  let d = [...dealsData];
+  if (currentCat !== 'all') d = d.filter(x => x.cat === currentCat);
+  if (currentUni !== 'all') d = d.filter(x => x.universities.includes(currentUni));
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    d = d.filter(x => x.name.toLowerCase().includes(q) || x.desc.toLowerCase().includes(q) || x.cat.includes(q));
+  }
+  if (currentSort === 'discount') d.sort((a,b) => b.discountNum - a.discountNum);
+  else if (currentSort === 'featured') d.sort((a,b) => b.featured - a.featured);
+  return d;
+}
+
+function renderFeatured() {
+  const featured = dealsData.filter(d => d.featured && (currentUni === 'all' || d.universities.includes(currentUni)));
+  const strip = document.getElementById('featured-strip');
+  const section = document.getElementById('featured-section');
+  if (!featured.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  strip.innerHTML = featured.map(d => `
+    <div class="featured-card" onclick="openModal(${d.id})">
+      <div class="featured-tag">Featured</div>
+      <div class="featured-name">${d.name}</div>
+      <div class="featured-location">${d.location.split(',')[0]}</div>
+      <div class="featured-discount">${d.discount}</div>
+      <div class="featured-sub">${d.desc}</div>
+    </div>
+  `).join('');
+}
+
+function renderDeals() {
+  const filtered = getFiltered();
+  const grid = document.getElementById('deal-grid');
+  const empty = document.getElementById('empty-state');
+  const count = document.getElementById('deal-count');
+  const title = document.getElementById('section-title');
+
+  count.textContent = `${filtered.length} deal${filtered.length !== 1 ? 's' : ''}`;
+
+  const catNames = { all:'All deals', food:'Food deals', printing:'Printing deals', transport:'Transport deals', salon:'Salon & Barber', airtime:'Airtime & Data', accommodation:'Accommodation', books:'Books & Supplies' };
+  title.textContent = catNames[currentCat] || 'All deals';
+
+  if (!filtered.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  grid.innerHTML = filtered.map((d, i) => `
+    <div class="deal-card" onclick="openModal(${d.id})" style="animation-delay:${i * 0.04}s">
+      <div class="deal-card-top">
+        <div class="deal-emoji-big">${d.emoji}</div>
+        <div>
+          <div class="deal-card-discount">${d.discount}</div>
+          <div class="deal-card-discount-label">student discount</div>
+        </div>
+      </div>
+      <div class="deal-card-body">
+        <div class="deal-card-name">${d.name}</div>
+        <div class="deal-card-cat">${d.desc}</div>
+        <div class="deal-card-meta">
+          <div class="deal-card-location">📍 ${d.location.split(',')[0]}</div>
+          <div class="deal-card-distance">${d.distance}</div>
+        </div>
+      </div>
+      <div class="deal-card-footer">
+        <div class="deal-card-uni">🎓 ${d.uni}</div>
+        <button class="save-btn ${d.saved ? 'saved' : ''}" onclick="toggleSave(event, ${d.id})">${d.saved ? '❤️' : '🤍'}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function render() { renderFeatured(); renderDeals(); }
+
+function filterCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  render();
+}
+
+function filterCatMobile(btn, cat) {
+  currentCat = cat;
+  document.querySelectorAll('.mobile-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function filterUni(val) { currentUni = val; render(); }
+function searchDeals(val) { currentSearch = val; renderDeals(); }
+function sortDeals(val) { currentSort = val; renderDeals(); }
+
+function toggleSave(e, id) {
+  e.stopPropagation();
+  const deal = dealsData.find(d => d.id === id);
+  deal.saved = !deal.saved;
+  e.currentTarget.textContent = deal.saved ? '❤️' : '🤍';
+  e.currentTarget.classList.toggle('saved', deal.saved);
+}
+
+function openModal(id) {
+  const d = dealsData.find(x => x.id === id);
+  document.getElementById('m-emoji').textContent = d.emoji;
+  document.getElementById('m-name').textContent = d.name;
+  document.getElementById('m-cat').textContent = d.cat.charAt(0).toUpperCase() + d.cat.slice(1);
+  document.getElementById('m-discount').textContent = d.discount;
+  document.getElementById('m-desc').textContent = d.desc;
+  document.getElementById('m-location').textContent = d.location;
+  document.getElementById('m-hours').textContent = d.hours;
+  document.getElementById('m-uni').textContent = d.uni;
+  document.getElementById('m-terms').textContent = '📋 Terms: ' + d.terms;
+  const btn = document.getElementById('modal-cta-btn');
+  btn.textContent = 'Show deal to business →';
+  btn.className = 'modal-cta';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function redeemDeal() {
+  const btn = document.getElementById('modal-cta-btn');
+  btn.textContent = '✓ Deal shown — enjoy your discount!';
+  btn.className = 'modal-cta redeemed';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
+
+render();
+</script>
+</body>
+</html>

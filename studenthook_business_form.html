@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentHook — List Your Business</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --yellow: #F5C842;
+  --yellow-dark: #C9A200;
+  --black: #0E0E0E;
+  --white: #FAFAF7;
+  --gray: #6B6B6B;
+  --light: #F0EFEA;
+  --border: rgba(14,14,14,0.12);
+  --green: #1A7A4A;
+  --green-bg: #E8F5EE;
+  --red: #E53935;
+  --red-bg: #FFF0F0;
+  --input-h: 48px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'DM Sans',sans-serif;
+  background:var(--light);
+  color:var(--black);
+  min-height:100vh;
+}
+
+/* LAYOUT */
+.page { display:grid; grid-template-columns:380px 1fr; min-height:100vh; }
+
+/* LEFT PANEL */
+.left-panel {
+  background:var(--black);
+  padding:48px 40px;
+  display:flex; flex-direction:column;
+  position:sticky; top:0; height:100vh;
+  overflow:hidden;
+}
+
+.panel-logo {
+  font-family:'Syne',sans-serif; font-weight:800; font-size:20px;
+  color:var(--white); margin-bottom:48px; letter-spacing:-0.5px;
+}
+.panel-logo span { color:var(--yellow); }
+
+.panel-tag {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(245,200,66,0.15);
+  color:var(--yellow);
+  font-size:11px; font-weight:600;
+  padding:6px 14px; border-radius:100px;
+  text-transform:uppercase; letter-spacing:0.06em;
+  margin-bottom:24px; width:fit-content;
+}
+
+.panel-title {
+  font-family:'Syne',sans-serif;
+  font-size:36px; font-weight:800;
+  color:var(--white); line-height:1.1;
+  letter-spacing:-1.5px; margin-bottom:16px;
+}
+.panel-title span { color:var(--yellow); }
+
+.panel-desc {
+  font-size:15px; color:rgba(255,255,255,0.45);
+  line-height:1.7; font-weight:300; margin-bottom:40px;
+}
+
+.panel-perks { display:flex; flex-direction:column; gap:16px; margin-bottom:auto; }
+.perk {
+  display:flex; gap:14px; align-items:flex-start;
+}
+.perk-icon {
+  width:38px; height:38px; border-radius:11px;
+  background:rgba(245,200,66,0.1);
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; flex-shrink:0;
+}
+.perk-title { font-size:14px; font-weight:500; color:var(--white); margin-bottom:2px; }
+.perk-desc { font-size:12px; color:rgba(255,255,255,0.4); line-height:1.5; }
+
+.panel-footer {
+  margin-top:40px; padding-top:24px;
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+.panel-footer-text { font-size:12px; color:rgba(255,255,255,0.25); line-height:1.6; }
+
+/* BG circles */
+.bg-circle1 {
+  position:absolute; width:300px; height:300px; border-radius:50%;
+  background:var(--yellow); opacity:0.05;
+  bottom:-80px; right:-80px; pointer-events:none;
+}
+.bg-circle2 {
+  position:absolute; width:200px; height:200px; border-radius:50%;
+  background:var(--yellow); opacity:0.04;
+  top:100px; right:20px; pointer-events:none;
+}
+
+/* RIGHT / FORM SIDE */
+.right-panel {
+  padding:48px 56px;
+  overflow-y:auto;
+}
+
+/* STEPS INDICATOR */
+.steps-bar {
+  display:flex; align-items:center; gap:0;
+  margin-bottom:40px;
+}
+.step-item {
+  display:flex; align-items:center; gap:10px;
+  cursor:pointer;
+}
+.step-circle {
+  width:32px; height:32px; border-radius:50%;
+  border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
+  color:var(--gray); background:var(--white);
+  transition:all 0.2s; flex-shrink:0;
+}
+.step-item.active .step-circle { border-color:var(--black); background:var(--black); color:var(--white); }
+.step-item.done .step-circle { border-color:var(--green); background:var(--green); color:var(--white); }
+.step-item.done .step-circle::after { content:'✓'; font-size:13px; }
+.step-item.done .step-num { display:none; }
+.step-label { font-size:13px; font-weight:500; color:var(--gray); white-space:nowrap; }
+.step-item.active .step-label { color:var(--black); }
+.step-item.done .step-label { color:var(--green); }
+.step-connector {
+  flex:1; height:1.5px; background:var(--border);
+  margin:0 12px; min-width:20px;
+}
+.step-connector.done { background:var(--green); }
+
+/* FORM SECTIONS */
+.form-section { display:none; animation:slideIn 0.3s ease both; }
+.form-section.active { display:block; }
+
+@keyframes slideIn {
+  from { opacity:0; transform:translateX(16px); }
+  to { opacity:1; transform:translateX(0); }
+}
+
+.form-header { margin-bottom:32px; }
+.form-step-label {
+  font-size:11px; font-weight:600; color:var(--yellow-dark);
+  text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;
+}
+.form-title {
+  font-family:'Syne',sans-serif; font-size:28px; font-weight:800;
+  letter-spacing:-1px; margin-bottom:8px;
+}
+.form-subtitle { font-size:15px; color:var(--gray); font-weight:300; line-height:1.6; }
+
+/* FORM ELEMENTS */
+.field-group { display:flex; flex-direction:column; gap:6px; margin-bottom:20px; }
+.field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+label {
+  font-size:13px; font-weight:500; color:var(--black);
+}
+.field-hint { font-size:12px; color:var(--gray); margin-top:2px; }
+
+input[type=text], input[type=email], input[type=tel], input[type=url], textarea, select {
+  width:100%; height:var(--input-h);
+  padding:0 16px;
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  background:var(--white);
+  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--black);
+  outline:none; transition:border-color 0.2s, box-shadow 0.2s;
+  appearance:none;
+}
+input:focus, textarea:focus, select:focus {
+  border-color:var(--black);
+  box-shadow:0 0 0 3px rgba(14,14,14,0.06);
+}
+input.error, select.error, textarea.error { border-color:var(--red); }
+input.valid, select.valid, textarea.valid { border-color:var(--green); }
+
+textarea {
+  height:110px; padding:14px 16px;
+  resize:vertical; line-height:1.6;
+}
+
+select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B6B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; cursor:pointer; }
+
+/* CATEGORY PICKER */
+.cat-picker { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+.cat-option {
+  border:1.5px solid var(--border);
+  border-radius:14px; padding:14px 10px;
+  text-align:center; cursor:pointer;
+  background:var(--white); transition:all 0.15s;
+}
+.cat-option:hover { border-color:rgba(14,14,14,0.3); background:var(--light); }
+.cat-option.selected { border-color:var(--black); background:var(--black); }
+.cat-option.selected .cat-opt-name { color:var(--white); }
+.cat-opt-emoji { font-size:24px; margin-bottom:6px; }
+.cat-opt-name { font-size:12px; font-weight:500; color:var(--black); }
+
+/* DISCOUNT TYPE TOGGLE */
+.discount-type { display:flex; gap:10px; margin-bottom:16px; }
+.dtype-btn {
+  flex:1; padding:12px; border-radius:12px;
+  border:1.5px solid var(--border);
+  background:var(--white); cursor:pointer;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500;
+  text-align:center; transition:all 0.15s; color:var(--gray);
+}
+.dtype-btn.active { border-color:var(--black); background:var(--black); color:var(--white); }
+
+/* UNI CHECKBOXES */
+.uni-checks { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.uni-check-item {
+  display:flex; align-items:center; gap:12px;
+  padding:14px 16px; border-radius:12px;
+  border:1.5px solid var(--border);
+  background:var(--white); cursor:pointer;
+  transition:all 0.15s;
+}
+.uni-check-item:hover { border-color:rgba(14,14,14,0.25); }
+.uni-check-item.checked { border-color:var(--black); background:rgba(14,14,14,0.03); }
+.uni-checkbox {
+  width:20px; height:20px; border-radius:6px;
+  border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; transition:all 0.15s;
+  font-size:11px;
+}
+.uni-check-item.checked .uni-checkbox { border-color:var(--black); background:var(--black); color:var(--white); }
+.uni-check-name { font-size:14px; font-weight:500; flex:1; }
+.uni-check-count { font-size:12px; color:var(--gray); }
+
+/* HOURS */
+.hours-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+.hours-field label { font-size:12px; color:var(--gray); margin-bottom:4px; display:block; }
+.hours-field input { height:40px; font-size:13px; }
+
+/* PLAN CARDS */
+.plan-cards { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+.plan-card {
+  border:1.5px solid var(--border);
+  border-radius:16px; padding:20px;
+  cursor:pointer; transition:all 0.2s;
+  background:var(--white); position:relative;
+}
+.plan-card:hover { border-color:rgba(14,14,14,0.3); }
+.plan-card.selected { border-color:var(--black); background:var(--black); }
+.plan-card.selected .plan-name { color:var(--white); }
+.plan-card.selected .plan-price { color:var(--yellow); }
+.plan-card.selected .plan-desc { color:rgba(255,255,255,0.5); }
+.plan-card.selected .plan-features li { color:rgba(255,255,255,0.7); }
+.plan-card.selected .plan-features li::before { background:rgba(245,200,66,0.2); color:var(--yellow); }
+.plan-badge {
+  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+  background:var(--yellow); color:var(--black);
+  font-size:10px; font-weight:700; padding:3px 10px; border-radius:100px;
+  white-space:nowrap; text-transform:uppercase; letter-spacing:0.06em;
+}
+.plan-name { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; margin-bottom:4px; }
+.plan-price { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:var(--yellow-dark); margin-bottom:4px; letter-spacing:-0.5px; }
+.plan-desc { font-size:12px; color:var(--gray); margin-bottom:14px; }
+.plan-features { list-style:none; display:flex; flex-direction:column; gap:7px; }
+.plan-features li { font-size:12px; color:var(--gray); display:flex; align-items:center; gap:8px; }
+.plan-features li::before {
+  content:'✓'; width:16px; height:16px;
+  background:var(--green-bg); color:var(--green);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:700; flex-shrink:0;
+}
+
+/* PREVIEW CARD */
+.preview-card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:18px; overflow:hidden;
+  margin-bottom:24px;
+}
+.preview-top {
+  background:var(--light); padding:20px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.preview-emoji-box {
+  width:56px; height:56px; background:var(--white);
+  border-radius:16px; display:flex; align-items:center;
+  justify-content:center; font-size:28px;
+  box-shadow:0 2px 8px rgba(14,14,14,0.06);
+}
+.preview-discount-big {
+  font-family:'Syne',sans-serif; font-size:26px; font-weight:800;
+  letter-spacing:-1px; text-align:right;
+}
+.preview-discount-label { font-size:11px; color:var(--gray); text-align:right; }
+.preview-body { padding:16px 18px; }
+.preview-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:4px; }
+.preview-desc { font-size:13px; color:var(--gray); margin-bottom:10px; }
+.preview-location { font-size:12px; color:var(--gray); }
+
+/* NAVIGATION BUTTONS */
+.form-nav { display:flex; gap:12px; margin-top:32px; align-items:center; }
+.btn-next {
+  background:var(--black); color:var(--white);
+  font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500;
+  padding:14px 32px; border-radius:100px; border:none; cursor:pointer;
+  transition:transform 0.15s, background 0.2s;
+  display:flex; align-items:center; gap:8px;
+}
+.btn-next:hover { background:#222; transform:translateY(-1px); }
+.btn-back {
+  background:transparent; color:var(--gray);
+  font-family:'DM Sans',sans-serif; font-size:15px; font-weight:400;
+  padding:14px 20px; border-radius:100px;
+  border:1.5px solid var(--border); cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-back:hover { border-color:var(--black); color:var(--black); }
+.progress-text { font-size:13px; color:var(--gray); margin-left:auto; }
+
+/* SUCCESS SCREEN */
+.success-screen {
+  display:none; text-align:center; padding:60px 20px;
+  animation:fadeUp 0.4s ease both;
+}
+.success-screen.show { display:block; }
+.success-icon {
+  width:80px; height:80px; border-radius:50%;
+  background:var(--green-bg); color:var(--green);
+  font-size:36px; display:flex; align-items:center; justify-content:center;
+  margin:0 auto 24px;
+  animation:pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.success-title {
+  font-family:'Syne',sans-serif; font-size:28px; font-weight:800;
+  letter-spacing:-1px; margin-bottom:12px;
+}
+.success-desc { font-size:16px; color:var(--gray); line-height:1.7; max-width:400px; margin:0 auto 32px; font-weight:300; }
+.success-ref {
+  background:var(--light); border-radius:12px;
+  padding:14px 20px; display:inline-block;
+  font-family:'Syne',sans-serif; font-size:18px; font-weight:700;
+  letter-spacing:2px; margin-bottom:32px;
+}
+.success-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+/* ERROR MSG */
+.error-msg { font-size:12px; color:var(--red); margin-top:4px; display:none; }
+.error-msg.show { display:block; }
+
+/* RESPONSIVE */
+@media(max-width:900px) {
+  .page { grid-template-columns:1fr; }
+  .left-panel { display:none; }
+  .right-panel { padding:32px 20px; }
+  .cat-picker { grid-template-columns:repeat(4,1fr); }
+  .field-row { grid-template-columns:1fr; }
+  .plan-cards { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="bg-circle1"></div>
+    <div class="bg-circle2"></div>
+    <div class="panel-logo">Student<span>Hook</span></div>
+    <div class="panel-tag">For businesses</div>
+    <h1 class="panel-title">Reach students.<br><span>Grow faster.</span></h1>
+    <p class="panel-desc">List your student discount and get discovered by thousands of university students in Kampala every day.</p>
+    <div class="panel-perks">
+      <div class="perk">
+        <div class="perk-icon">🆓</div>
+        <div>
+          <div class="perk-title">Free to list</div>
+          <div class="perk-desc">Basic listing is completely free. Upgrade anytime to get featured.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon">⚡</div>
+        <div>
+          <div class="perk-title">Live in 24 hours</div>
+          <div class="perk-desc">We review and approve all listings within one business day.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon">📊</div>
+        <div>
+          <div class="perk-title">See your results</div>
+          <div class="perk-desc">Track how many students view and redeem your deal each week.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon">🎓</div>
+        <div>
+          <div class="perk-title">100,000+ students</div>
+          <div class="perk-desc">Makerere, Kyambogo, MUBS, Nkumba and growing.</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <div class="panel-footer-text">Questions? WhatsApp us at +256 700 000000<br>or email hello@studenthook.ug</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- STEPS BAR -->
+    <div class="steps-bar">
+      <div class="step-item active" id="step-ind-1">
+        <div class="step-circle"><span class="step-num">1</span></div>
+        <div class="step-label">Business info</div>
+      </div>
+      <div class="step-connector" id="conn-1"></div>
+      <div class="step-item" id="step-ind-2">
+        <div class="step-circle"><span class="step-num">2</span></div>
+        <div class="step-label">Your deal</div>
+      </div>
+      <div class="step-connector" id="conn-2"></div>
+      <div class="step-item" id="step-ind-3">
+        <div class="step-circle"><span class="step-num">3</span></div>
+        <div class="step-label">Choose plan</div>
+      </div>
+      <div class="step-connector" id="conn-3"></div>
+      <div class="step-item" id="step-ind-4">
+        <div class="step-circle"><span class="step-num">4</span></div>
+        <div class="step-label">Review</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: BUSINESS INFO -->
+    <div class="form-section active" id="section-1">
+      <div class="form-header">
+        <div class="form-step-label">Step 1 of 4</div>
+        <h2 class="form-title">Tell us about your business</h2>
+        <p class="form-subtitle">Basic details so students know who you are and where to find you.</p>
+      </div>
+
+      <div class="field-group">
+        <label for="biz-name">Business name *</label>
+        <input type="text" id="biz-name" placeholder="e.g. QuickPrint Centre">
+        <div class="error-msg" id="err-biz-name">Please enter your business name</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label for="biz-phone">WhatsApp / Phone number *</label>
+          <input type="tel" id="biz-phone" placeholder="+256 700 000000">
+          <div class="error-msg" id="err-biz-phone">Please enter a phone number</div>
+        </div>
+        <div class="field-group">
+          <label for="biz-email">Email address *</label>
+          <input type="email" id="biz-email" placeholder="you@business.com">
+          <div class="error-msg" id="err-biz-email">Please enter a valid email</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="biz-location">Physical address *</label>
+        <input type="text" id="biz-location" placeholder="e.g. Wandegeya, next to Total petrol station">
+        <div class="error-msg" id="err-biz-location">Please enter your address</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label for="biz-area">Area / Neighbourhood *</label>
+          <select id="biz-area">
+            <option value="">Select area</option>
+            <option>Wandegeya</option>
+            <option>Kikoni</option>
+            <option>Kalerwe</option>
+            <option>Makerere Hill</option>
+            <option>Naguru</option>
+            <option>Kyambogo area</option>
+            <option>Nakawa</option>
+            <option>Entebbe Road</option>
+            <option>City Centre</option>
+            <option>Other</option>
+          </select>
+          <div class="error-msg" id="err-biz-area">Please select your area</div>
+        </div>
+        <div class="field-group">
+          <label for="biz-type">Business type *</label>
+          <select id="biz-type">
+            <option value="">Select type</option>
+            <option>Restaurant / Food</option>
+            <option>Printing / Stationery</option>
+            <option>Salon / Barbershop</option>
+            <option>Transport</option>
+            <option>Accommodation / Hostel</option>
+            <option>Mobile / Airtime</option>
+            <option>Books / Supplies</option>
+            <option>Gym / Fitness</option>
+            <option>Retail / Clothing</option>
+            <option>Other</option>
+          </select>
+          <div class="error-msg" id="err-biz-type">Please select a business type</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Opening hours</label>
+        <div class="hours-grid">
+          <div class="hours-field">
+            <label>Opens at</label>
+            <input type="text" id="hours-open" placeholder="e.g. 8:00am">
+          </div>
+          <div class="hours-field">
+            <label>Closes at</label>
+            <input type="text" id="hours-close" placeholder="e.g. 8:00pm">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-next" onclick="goTo(2)">Next: Your deal →</button>
+        <span class="progress-text">1 of 4</span>
+      </div>
+    </div>
+
+    <!-- STEP 2: DEAL INFO -->
+    <div class="form-section" id="section-2">
+      <div class="form-header">
+        <div class="form-step-label">Step 2 of 4</div>
+        <h2 class="form-title">What's your student deal?</h2>
+        <p class="form-subtitle">Tell students exactly what discount they'll get and how to use it.</p>
+      </div>
+
+      <div class="field-group">
+        <label>Category *</label>
+        <div class="cat-picker" id="cat-picker">
+          <div class="cat-option" onclick="selectCat(this,'food')"><div class="cat-opt-emoji">🍱</div><div class="cat-opt-name">Food</div></div>
+          <div class="cat-option" onclick="selectCat(this,'printing')"><div class="cat-opt-emoji">🖨️</div><div class="cat-opt-name">Printing</div></div>
+          <div class="cat-option" onclick="selectCat(this,'transport')"><div class="cat-opt-emoji">🛵</div><div class="cat-opt-name">Transport</div></div>
+          <div class="cat-option" onclick="selectCat(this,'salon')"><div class="cat-opt-emoji">✂️</div><div class="cat-opt-name">Salon</div></div>
+          <div class="cat-option" onclick="selectCat(this,'airtime')"><div class="cat-opt-emoji">📱</div><div class="cat-opt-name">Airtime</div></div>
+          <div class="cat-option" onclick="selectCat(this,'accommodation')"><div class="cat-opt-emoji">🏠</div><div class="cat-opt-name">Housing</div></div>
+          <div class="cat-option" onclick="selectCat(this,'books')"><div class="cat-opt-emoji">📚</div><div class="cat-opt-name">Books</div></div>
+          <div class="cat-option" onclick="selectCat(this,'other')"><div class="cat-opt-emoji">🏷️</div><div class="cat-opt-name">Other</div></div>
+        </div>
+        <div class="error-msg" id="err-cat">Please select a category</div>
+      </div>
+
+      <div class="field-group">
+        <label>Discount type *</label>
+        <div class="discount-type">
+          <button class="dtype-btn active" id="dtype-pct" onclick="setDiscountType('percent')">% Percentage off</button>
+          <button class="dtype-btn" id="dtype-ugx" onclick="setDiscountType('ugx')">UGX Amount off</button>
+          <button class="dtype-btn" id="dtype-free" onclick="setDiscountType('free')">Free item / bundle</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label for="discount-value">Discount value *</label>
+          <input type="text" id="discount-value" placeholder="e.g. 20" oninput="updatePreview()">
+          <div class="field-hint" id="discount-hint">Enter the percentage (e.g. 20 for 20% off)</div>
+          <div class="error-msg" id="err-discount">Please enter the discount amount</div>
+        </div>
+        <div class="field-group">
+          <label for="deal-title">Deal headline *</label>
+          <input type="text" id="deal-title" placeholder="e.g. 20% off all meals" oninput="updatePreview()">
+          <div class="error-msg" id="err-deal-title">Please enter a headline</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="deal-terms">Terms & conditions</label>
+        <textarea id="deal-terms" placeholder="e.g. Valid Mon–Fri only. Show student ID at desk. Cannot be combined with other offers."></textarea>
+        <div class="field-hint">Keep it simple — students need to know exactly how to use the deal.</div>
+      </div>
+
+      <div class="field-group">
+        <label>Valid for universities *</label>
+        <div class="uni-checks">
+          <div class="uni-check-item" onclick="toggleUni(this,'makerere')">
+            <div class="uni-checkbox">✓</div>
+            <div class="uni-check-name">Makerere University</div>
+            <div class="uni-check-count">~40,000 students</div>
+          </div>
+          <div class="uni-check-item" onclick="toggleUni(this,'kyambogo')">
+            <div class="uni-checkbox"></div>
+            <div class="uni-check-name">Kyambogo University</div>
+            <div class="uni-check-count">~30,000 students</div>
+          </div>
+          <div class="uni-check-item" onclick="toggleUni(this,'mubs')">
+            <div class="uni-checkbox"></div>
+            <div class="uni-check-name">MUBS (Nakawa)</div>
+            <div class="uni-check-count">~20,000 students</div>
+          </div>
+          <div class="uni-check-item" onclick="toggleUni(this,'nkumba')">
+            <div class="uni-checkbox"></div>
+            <div class="uni-check-name">Nkumba University</div>
+            <div class="uni-check-count">~10,000 students</div>
+          </div>
+        </div>
+        <div class="error-msg" id="err-uni">Please select at least one university</div>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-back" onclick="goTo(1)">← Back</button>
+        <button class="btn-next" onclick="goTo(3)">Next: Choose plan →</button>
+        <span class="progress-text">2 of 4</span>
+      </div>
+    </div>
+
+    <!-- STEP 3: PLAN -->
+    <div class="form-section" id="section-3">
+      <div class="form-header">
+        <div class="form-step-label">Step 3 of 4</div>
+        <h2 class="form-title">Choose your listing plan</h2>
+        <p class="form-subtitle">Start free and upgrade whenever you're ready to grow faster.</p>
+      </div>
+
+      <div class="plan-cards">
+        <div class="plan-card" id="plan-free" onclick="selectPlan('free')">
+          <div class="plan-name">Free listing</div>
+          <div class="plan-price">UGX 0</div>
+          <div class="plan-desc">per month, forever</div>
+          <ul class="plan-features">
+            <li>Listed in directory</li>
+            <li>All university filters</li>
+            <li>Basic deal card</li>
+            <li>Student redemptions</li>
+          </ul>
+        </div>
+        <div class="plan-card selected" id="plan-featured" onclick="selectPlan('featured')">
+          <div class="plan-badge">Most popular</div>
+          <div class="plan-name">Featured listing</div>
+          <div class="plan-price">UGX 80,000</div>
+          <div class="plan-desc">per month, cancel anytime</div>
+          <ul class="plan-features">
+            <li>Top of category</li>
+            <li>Featured strip placement</li>
+            <li>Push notification to students</li>
+            <li>Weekly analytics report</li>
+            <li>Verified badge</li>
+            <li>WhatsApp support</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="field-group" id="payment-section">
+        <label>Payment method</label>
+        <select id="payment-method">
+          <option value="">Select payment method</option>
+          <option value="mtn">MTN Mobile Money</option>
+          <option value="airtel">Airtel Money</option>
+          <option value="bank">Bank transfer</option>
+        </select>
+        <div class="field-hint">We'll send you payment instructions after submission. You won't be charged until your listing is approved.</div>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-back" onclick="goTo(2)">← Back</button>
+        <button class="btn-next" onclick="goTo(4)">Next: Review →</button>
+        <span class="progress-text">3 of 4</span>
+      </div>
+    </div>
+
+    <!-- STEP 4: REVIEW -->
+    <div class="form-section" id="section-4">
+      <div class="form-header">
+        <div class="form-step-label">Step 4 of 4</div>
+        <h2 class="form-title">Review your listing</h2>
+        <p class="form-subtitle">This is exactly how your deal will appear to students. Looking good?</p>
+      </div>
+
+      <!-- PREVIEW CARD -->
+      <div style="margin-bottom:8px;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;">Preview</div>
+      <div class="preview-card">
+        <div class="preview-top">
+          <div class="preview-emoji-box" id="prev-emoji">🏷️</div>
+          <div>
+            <div class="preview-discount-big" id="prev-discount">—</div>
+            <div class="preview-discount-label">student discount</div>
+          </div>
+        </div>
+        <div class="preview-body">
+          <div class="preview-name" id="prev-name">Your business name</div>
+          <div class="preview-desc" id="prev-desc">Your deal headline</div>
+          <div class="preview-location" id="prev-location">📍 Your location</div>
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div style="background:var(--light);border-radius:14px;padding:20px;margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;">Submission summary</div>
+        <div id="review-summary" style="display:flex;flex-direction:column;gap:10px;font-size:14px;"></div>
+      </div>
+
+      <div class="field-group">
+        <label>
+          <input type="checkbox" id="agree-terms" style="width:auto;height:auto;margin-right:8px;accent-color:var(--black)">
+          I confirm this information is accurate and I agree to StudentHook's listing guidelines
+        </label>
+        <div class="error-msg" id="err-agree">Please agree to the listing guidelines</div>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-back" onclick="goTo(3)">← Back</button>
+        <button class="btn-next" id="submit-btn" onclick="submitForm()" style="background:var(--green)">Submit listing ✓</button>
+        <span class="progress-text">4 of 4</span>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-screen" id="success-screen">
+      <div class="success-icon">✓</div>
+      <h2 class="success-title">You're on the list! 🎉</h2>
+      <p class="success-desc">Your listing has been submitted. We'll review it within 24 hours and notify you on WhatsApp when it goes live.</p>
+      <div class="success-ref" id="success-ref">SH-000000</div>
+      <div class="success-actions">
+        <button class="btn-next" onclick="location.reload()">Submit another listing</button>
+        <a href="studenthook_app.html" class="btn-back" style="display:flex;align-items:center;text-decoration:none">View student app →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+let selectedCat = '';
+let selectedCatEmoji = '🏷️';
+let discountType = 'percent';
+let selectedPlan = 'featured';
+const checkedUnis = new Set(['makerere']);
+
+const catEmojis = { food:'🍱', printing:'🖨️', transport:'🛵', salon:'✂️', airtime:'📱', accommodation:'🏠', books:'📚', other:'🏷️' };
+
+function goTo(step) {
+  if (step > currentStep && !validate(currentStep)) return;
+  document.getElementById('section-' + currentStep).classList.remove('active');
+  if (step === 4) buildReview();
+  currentStep = step;
+  document.getElementById('section-' + currentStep).classList.add('active');
+  updateStepBar();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validate(step) {
+  let ok = true;
+  if (step === 1) {
+    ok = checkField('biz-name', 'err-biz-name', v => v.trim().length > 1) && ok;
+    ok = checkField('biz-phone', 'err-biz-phone', v => v.trim().length > 5) && ok;
+    ok = checkField('biz-email', 'err-biz-email', v => v.includes('@')) && ok;
+    ok = checkField('biz-location', 'err-biz-location', v => v.trim().length > 3) && ok;
+    ok = checkField('biz-area', 'err-biz-area', v => v !== '') && ok;
+    ok = checkField('biz-type', 'err-biz-type', v => v !== '') && ok;
+  }
+  if (step === 2) {
+    if (!selectedCat) { showErr('err-cat'); ok = false; } else { hideErr('err-cat'); }
+    ok = checkField('discount-value', 'err-discount', v => v.trim().length > 0) && ok;
+    ok = checkField('deal-title', 'err-deal-title', v => v.trim().length > 3) && ok;
+    if (checkedUnis.size === 0) { showErr('err-uni'); ok = false; } else { hideErr('err-uni'); }
+  }
+  return ok;
+}
+
+function checkField(id, errId, fn) {
+  const el = document.getElementById(id);
+  const val = el.value;
+  if (fn(val)) { el.classList.remove('error'); el.classList.add('valid'); hideErr(errId); return true; }
+  else { el.classList.add('error'); el.classList.remove('valid'); showErr(errId); return false; }
+}
+function showErr(id) { document.getElementById(id).classList.add('show'); }
+function hideErr(id) { document.getElementById(id).classList.remove('show'); }
+
+function updateStepBar() {
+  for (let i = 1; i <= 4; i++) {
+    const ind = document.getElementById('step-ind-' + i);
+    ind.classList.remove('active', 'done');
+    if (i < currentStep) ind.classList.add('done');
+    else if (i === currentStep) ind.classList.add('active');
+    if (i < 4) {
+      const conn = document.getElementById('conn-' + i);
+      conn.classList.toggle('done', i < currentStep);
+    }
+  }
+}
+
+function selectCat(el, cat) {
+  document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCat = cat;
+  selectedCatEmoji = catEmojis[cat] || '🏷️';
+  hideErr('err-cat');
+  updatePreview();
+}
+
+function setDiscountType(type) {
+  discountType = type;
+  document.querySelectorAll('.dtype-btn').forEach(b => b.classList.remove('active'));
+  const hints = { percent: 'Enter the percentage (e.g. 20 for 20% off)', ugx: 'Enter the UGX amount (e.g. 5000)', free: 'Describe the free item (e.g. 1GB data)' };
+  const placeholders = { percent: 'e.g. 20', ugx: 'e.g. 5000', free: 'e.g. 1GB' };
+  if (type === 'percent') document.getElementById('dtype-pct').classList.add('active');
+  else if (type === 'ugx') document.getElementById('dtype-ugx').classList.add('active');
+  else document.getElementById('dtype-free').classList.add('active');
+  document.getElementById('discount-hint').textContent = hints[type];
+  document.getElementById('discount-value').placeholder = placeholders[type];
+  updatePreview();
+}
+
+function toggleUni(el, uni) {
+  el.classList.toggle('checked');
+  const cb = el.querySelector('.uni-checkbox');
+  if (el.classList.contains('checked')) { checkedUnis.add(uni); cb.textContent = '✓'; }
+  else { checkedUnis.delete(uni); cb.textContent = ''; }
+  if (checkedUnis.size > 0) hideErr('err-uni');
+}
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.getElementById('plan-free').classList.toggle('selected', plan === 'free');
+  document.getElementById('plan-featured').classList.toggle('selected', plan === 'featured');
+  document.getElementById('payment-section').style.display = plan === 'featured' ? 'flex' : 'none';
+}
+
+function updatePreview() {
+  const val = document.getElementById('discount-value').value;
+  const title = document.getElementById('deal-title').value;
+  const name = document.getElementById('biz-name').value;
+  const location = document.getElementById('biz-location').value;
+  document.getElementById('prev-emoji').textContent = selectedCatEmoji;
+  let discStr = val ? (discountType === 'percent' ? val + '%' : discountType === 'ugx' ? 'UGX ' + Number(val).toLocaleString() : val) : '—';
+  document.getElementById('prev-discount').textContent = discStr;
+  document.getElementById('prev-desc').textContent = title || 'Your deal headline';
+  document.getElementById('prev-name').textContent = name || 'Your business name';
+  document.getElementById('prev-location').textContent = '📍 ' + (location || 'Your location');
+}
+
+function buildReview() {
+  updatePreview();
+  document.getElementById('prev-emoji').textContent = selectedCatEmoji;
+  const val = document.getElementById('discount-value').value;
+  const unis = [...checkedUnis].map(u => ({ makerere:'Makerere', kyambogo:'Kyambogo', mubs:'MUBS', nkumba:'Nkumba' })[u]).join(', ');
+  const rows = [
+    ['Business', document.getElementById('biz-name').value],
+    ['Location', document.getElementById('biz-area').value],
+    ['Contact', document.getElementById('biz-phone').value],
+    ['Category', selectedCat || '—'],
+    ['Discount', val + (discountType === 'percent' ? '%' : discountType === 'ugx' ? ' UGX off' : ' (free item)')],
+    ['Universities', unis || '—'],
+    ['Plan', selectedPlan === 'featured' ? 'Featured — UGX 80,000/mo' : 'Free listing'],
+  ];
+  document.getElementById('review-summary').innerHTML = rows.map(([k,v]) =>
+    `<div style="display:flex;justify-content:space-between;gap:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+      <span style="color:var(--gray);flex-shrink:0">${k}</span>
+      <span style="font-weight:500;text-align:right">${v}</span>
+    </div>`
+  ).join('');
+}
+
+function submitForm() {
+  if (!document.getElementById('agree-terms').checked) { showErr('err-agree'); return; }
+  hideErr('err-agree');
+  document.getElementById('section-4').classList.remove('active');
+  const screen = document.getElementById('success-screen');
+  screen.classList.add('show');
+  const ref = 'SH-' + Math.floor(100000 + Math.random() * 900000);
+  document.getElementById('success-ref').textContent = ref;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Init
+selectPlan('featured');
+document.getElementById('payment-section').style.display = 'flex';
+// Pre-check makerere
+document.querySelector('.uni-check-item').classList.add('checked');
+document.querySelector('.uni-check-item .uni-checkbox').textContent = '✓';
+</script>
+</body>
+</html>
